@@ -4,13 +4,13 @@ import time
 
 # uncomment one of the options below
 # 1. connection via Infura
-# web3 = Web3(Web3.HTTPProvider("https://mainnet.infura.io/your-personal-number"))
+web3 = Web3(Web3.HTTPProvider("https://mainnet.infura.io/v3/ca48ee46d4b04cf1b4e335fde0794792"))
 
 # 2. or connection via local node 
 # web3 = Web3(Web3.IPCProvider('/your-path-to/geth.ipc'))
 
 # load a block.
-Nblocks = 10000
+Nblocks = 1000
 output_every = 2
 start_time = time.time()
 try:
@@ -63,4 +63,4 @@ for block in range(start, start + Nblocks):
         with open('timeperXblocks.txt', 'a') as f:
             f.write("%d %f \n" % (block, end - start_time))
     if (count % 100) == 0:
-        print("100 new blocks completed.")
+        print("{}: 100 new blocks completed.".format(count//100))
