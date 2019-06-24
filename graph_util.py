@@ -1,17 +1,17 @@
 import sqlite3
-from typing import List
+from typing import List, Any
 
 import community
 import networkx as nx
 
-graphPath = "transactions.graphml"
-SELECT = """
-SELECT sender, recipient, value 
-FROM Quick
-"""
+from config import GENERAL_GRAPH_PATH, DATABASE_PATH
 
 
-def addEdges(graph: nx.Graph, rows: List):
+def createGraph() -> nx.Graph:
+    return nx.Graph()
+
+
+def addEdges(graph: nx.Graph, rows: List[str, str, Any]):
     for row in rows:
         sender, recipient, value = row
         graph.add_edge(sender, recipient, value=value)
@@ -23,19 +23,20 @@ def setColor(graph: nx.Graph):
         graph.add_node(node, color=partition[node])
 
 
-def saveGraph(graph: nx.Graph, path):
+def saveGraph(graph: nx.Graph, path: str):
     nx.write_graphml(graph, path=path)
 
 
 def main():
-    conn = sqlite3.connect("blockchain.db")
+    conn = sqlite3.connect(DATABASE_PATH)
     cur = conn.cursor()
-    rows = cur.execute(SELECT).fetchall()
+    select = """SELECT sender, recipient, value FROM Quick"""
+    rows: List[str, str, str] = cur.execute(select).fetchall()
 
     graph = nx.Graph()
     addEdges(graph, rows)
     setColor(graph)
-    saveGraph(graph, graphPath)
+    saveGraph(graph, GENERAL_GRAPH_PATH)
 
 
 if __name__ == '__main__':

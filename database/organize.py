@@ -1,4 +1,14 @@
-def order_table_block(block, web3):
+from functools import singledispatch
+from typing import Union, Dict, Tuple
+
+from hexbytes import HexBytes
+from web3 import Web3
+from web3.datastructures import AttributeDict
+
+from config import DATABASE_PATH as db_name
+
+
+def createBlockRecord(block: int, web3: Web3) -> Tuple[Dict, AttributeDict]:
     """ build a block table to be compatible with SQLite data types"""
     block_data = web3.eth.getBlock(block)
     block_table = dict(block_data)
@@ -11,8 +21,8 @@ def order_table_block(block, web3):
 
     # convert types to be SQLite-compatible
     tostring = ['transactions', 'difficulty', 'totalDifficulty', 'uncles']
-    tohex = ['blockHash', 'blockLogsBloom', 'blockNonce', 'extraData', 'mixHash', 'parentHash', 'receiptsRoot',
-             'sha3Uncles', 'stateRoot', 'transactionsRoot']
+    tohex = ['blockHash', 'blockLogsBloom', 'blockNonce', 'extraData', 'mixHash', 'parentHash',
+             'receiptsRoot', 'sha3Uncles', 'stateRoot', 'transactionsRoot']
 
     for nn in block_table.keys():
         if nn in tohex:
@@ -22,11 +32,21 @@ def order_table_block(block, web3):
     return block_table, block_data
 
 
-def order_table_quick(hashh, block, web3, balance=False):
-    """ build a Quick table to be compatible with SQLite data types; balance: do not read state; useful when the node still does full sync """
-    # open transaction data
-    tx_data = web3.eth.getTransaction(hashh)
+@singledispatch
+def createQuickRecord(
+        dispatch: Union[AttributeDict, HexBytes],
+        block: int, web3: Web3, balance=False) -> Tuple[Dict, AttributeDict]:
+    raise TypeError
 
+
+@createQuickRecord.register
+def _(hashh: HexBytes, block, web3, balance=False):
+    tx_data: AttributeDict = web3.eth.getTransaction(hashh)
+    return createQuickRecord(tx_data, block, web3, balance)
+
+
+@createQuickRecord.register
+def _(tx_data: AttributeDict, block, web3, balance=False):
     # get addresses
     addr_from = tx_data['from']
     addr_to = tx_data['to']
@@ -61,19 +81,27 @@ def order_table_quick(hashh, block, web3, balance=False):
     return quick_table, tx_data
 
 
-def order_table_tx(tx_data, hashh, web3):
+@singledispatch
+def createTxRecord(dispatch: Union[HexBytes, AttributeDict],
+                   tx_data: AttributeDict, web3: Web3) -> Dict:
+    raise TypeError
+
+
+@createTxRecord.register
+def _(hashh: HexBytes, tx_data, web3):
+    receipt_data = web3.eth.getTransactionReceipt(hashh)
+    createTxRecord(receipt_data, tx_data, web3)
+
+
+@createTxRecord.register
+def _(receipt_data: AttributeDict, tx_data, web3):
     """ build a TX table to be compatible with SQLite data types"""
-
     TX_table = dict(tx_data)
-    # pop data already in Quick
-
     pop_tx_keys = ['from', 'to', 'value',
                    'nonce', 'blockHash', 'hash']
     for nn in pop_tx_keys:
         TX_table.pop(nn)
 
-    # add data from the receipt
-    receipt_data = web3.eth.getTransactionReceipt(hashh)
     receipt_keys = ['contractAddress', 'cumulativeGasUsed',
                     'gasUsed', 'gasUsed', 'logs', 'logsBloom',
                     'status', 'transactionHash', 'transactionIndex']
@@ -100,12 +128,11 @@ def order_table_tx(tx_data, hashh, web3):
     return TX_table
 
 
-def execute_sql(table_quick, table_tx, table_block):
+def saveTables(table_quick, table_tx, table_block):
     import os
-    from sql_helper import create_database, update_database, create_index
+    from database.sql_helper import create_database, update_database, create_index
     import sqlite3 as sq3
 
-    db_name = 'blockchain.db'
     db_is_new = not os.path.exists(db_name)
 
     # connect to the database
@@ -116,8 +143,7 @@ def execute_sql(table_quick, table_tx, table_block):
         print('Creating a new DB.')
         create_database(cur)
         create_index(cur)
-        update_database(cur, table_quick, table_tx, table_block)
-    else:
-        update_database(cur, table_quick, table_tx, table_block)
+
+    update_database(cur, table_quick, table_tx, table_block)
     conn.commit()
     conn.close()

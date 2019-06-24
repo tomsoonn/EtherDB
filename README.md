@@ -1,23 +1,12 @@
-# EthereumDB (Python and SQL) - [SOURCE](https://medium.com/validitylabs/how-to-interact-with-the-ethereum-blockchain-and-create-a-database-with-python-and-sql-3dcbd579b3c0?fbclid=IwAR0-eN9C9BseJGZNPzce8RenuQY66g4kqihXn144QvUXtYgAFZ3Z2nEEpGA)
+# Ethereum Graph 
+[Based on](https://medium.com/validitylabs/how-to-interact-with-the-ethereum-blockchain-and-create-a-database-with-python-and-sql-3dcbd579b3c0?fbclid=IwAR0-eN9C9BseJGZNPzce8RenuQY66g4kqihXn144QvUXtYgAFZ3Z2nEEpGA)
 
 Create the EthereumDB containing data residing on the Ethereum blockchain. 
 Database management system: SQLite.
 
 ## Create a database
-1. Connect to [Infura](https://www.infura.io) (or run a local node).
-2. Uncomment and specify the path in ```database.py```:
-
-```python
-#uncomment one of the options below
-# 1. connection via Infura
-#web3 = Web3(Web3.HTTPProvider("https://mainnet.infura.io/your-personal-number"))
-
-# 2. or connection via local node 
-#web3 = Web3(Web3.IPCProvider('/your-path-to/geth.ipc'))
-```
-3. execute:
-```python database.py```
-
+1. Set configuration file ```config.py```
+2. Create database ```python create_database.py```
 
 ## More on database design
 
@@ -92,19 +81,3 @@ Variable | Meaning
 [source 3](https://github.com/4c656554/BlockchainIllustrations/blob/master/Ethereum/EthBlockchain5.svg)
 [source 4](https://web3js.readthedocs.io/en/1.0/web3-eth.html#gettransaction)
 [source5](https://web3js.readthedocs.io/en/1.0/web3-eth.html#gettransactionreceipt)
-
-## How to use the database
-
-```python
-import sqlite3 as sq3
-conn = sq3.connect("blockchain.db")
-cur = conn.cursor()
-
-# some SQL code, e.g. select first five entries of the table Quick
-cur.execute("SELECT * FROM Quick LIMIT 5")
-a = cur.fetchall() #list of tuples containing all elements of the row
-print(a)
-conn.close()
-```
-
-###### Warning: the full database is large. You might not be able to open everything in one go.

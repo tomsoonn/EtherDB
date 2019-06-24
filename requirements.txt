@@ -1,3 +1,4 @@
+hexbytes
 web3
 networkx
 python-louvain

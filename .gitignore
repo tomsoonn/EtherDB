@@ -1,6 +1,5 @@
 .idea/
-*.db
-*block*.txt
+output
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

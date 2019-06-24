@@ -1,27 +1,30 @@
 import sqlite3
-from collections import namedtuple
-from typing import List
-import networkx as nx
+from typing import Tuple, Iterable, NamedTuple
 
-from build_graph import addEdges, setColor, saveGraph
+import graph_util as gu
+from config import CONTRACT_GRAPH_PATH, CONTRACT_HASH, DATABASE_PATH
 
-contract = '0xB8c77482e45F1F44dE1745F52C74426C631bDD52'  # Binance Token
-graphPath = 'Binance.graphml'
-
-askedFields = ['sender', 'recipient', 'input']
-DBRow = namedtuple('DBRow', field_names=askedFields)
+DBRow = NamedTuple('DBRow', sender=str, recipient=str, input=str)
 SELECT = f"""
-SELECT {','.join(askedFields)}
+SELECT sender,recipient,input
 FROM Quick
 JOIN TX ON Quick.txHash = TX.txHash
 """
 
 
+def executeSelect(select: str) -> Iterable[DBRow]:
+    conn = sqlite3.connect(DATABASE_PATH)
+    cur = conn.cursor()
+    rows = cur.execute(select)
+    namedRows = (DBRow(*r) for r in rows)
+    return namedRows
+
+
 def isInterestedContract(transaction: DBRow):
-    return contract == transaction.recipient
+    return CONTRACT_HASH == transaction.recipient
 
 
-def transferGenerator(transactions: List[DBRow]):
+def transferGenerator(transactions: Iterable[DBRow]) -> Iterable[Tuple[str, str, int]]:
     """Extraction based on
     https://stackoverflow.com/questions/48004356/get-token-transfer-detail-from-transaction-hash-with-web3js
     """
@@ -35,21 +38,13 @@ def transferGenerator(transactions: List[DBRow]):
 
 def main():
     transactions = executeSelect(SELECT)
-    transactions = list(filter(isInterestedContract, transactions))
-
-    graph = nx.Graph()
+    transactions = filter(isInterestedContract, transactions)
     edges = list(transferGenerator(transactions))
-    addEdges(graph, edges)
-    setColor(graph)
-    saveGraph(graph, path=graphPath)
 
-
-def executeSelect(select: str) -> List[DBRow]:
-    conn = sqlite3.connect("blockchain.db")
-    cur = conn.cursor()
-    rows = cur.execute(select).fetchall()
-    namedRows = [DBRow(*r) for r in rows]
-    return namedRows
+    graph = gu.createGraph()
+    gu.addEdges(graph, edges)
+    gu.setColor(graph)
+    gu.saveGraph(graph, path=CONTRACT_GRAPH_PATH)
 
 
 if __name__ == '__main__':
