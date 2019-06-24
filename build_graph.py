@@ -14,7 +14,7 @@ FROM Quick
 def addEdges(graph: nx.Graph, rows: List):
     for row in rows:
         sender, recipient, value = row
-        graph.add_edge(sender, recipient, vallue=value)
+        graph.add_edge(sender, recipient, value=value)
 
 
 def setColor(graph: nx.Graph):
@@ -23,8 +23,8 @@ def setColor(graph: nx.Graph):
         graph.add_node(node, color=partition[node])
 
 
-def saveGraph(graph: nx.Graph):
-    nx.write_graphml(graph, path=graphPath)
+def saveGraph(graph: nx.Graph, path):
+    nx.write_graphml(graph, path=path)
 
 
 def main():
@@ -35,7 +35,7 @@ def main():
     graph = nx.Graph()
     addEdges(graph, rows)
     setColor(graph)
-    saveGraph(graph)
+    saveGraph(graph, graphPath)
 
 
 if __name__ == '__main__':
