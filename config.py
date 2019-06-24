@@ -13,8 +13,8 @@ LAST_BLOCK_PATH = os.path.join(_outputPath, 'lastBlock.txt')
 TIME_PER_BLOCK_PATH = os.path.join(_outputPath, 'timePerBlocks.txt')
 
 # graph
-GENERAL_GRAPH_PATH = 'transactions.graphml'
+GENERAL_GRAPH_PATH = os.path.join(_outputPath, 'transactions.graphml')
 
 # contact graph
 CONTRACT_HASH = '0xB8c77482e45F1F44dE1745F52C74426C631bDD52'  # Binance Token
-CONTRACT_GRAPH_PATH = 'Binance.graphml'
+CONTRACT_GRAPH_PATH = os.path.join(_outputPath, 'Binance.graphml')

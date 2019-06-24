@@ -1,5 +1,5 @@
 import sqlite3
-from typing import List, Any
+from typing import List, Any, Tuple
 
 import community
 import networkx as nx
@@ -11,7 +11,7 @@ def createGraph() -> nx.Graph:
     return nx.Graph()
 
 
-def addEdges(graph: nx.Graph, rows: List[str, str, Any]):
+def addEdges(graph: nx.Graph, rows: List[Tuple[str, str, Any]]):
     for row in rows:
         sender, recipient, value = row
         graph.add_edge(sender, recipient, value=value)
@@ -31,7 +31,7 @@ def main():
     conn = sqlite3.connect(DATABASE_PATH)
     cur = conn.cursor()
     select = """SELECT sender, recipient, value FROM Quick"""
-    rows: List[str, str, str] = cur.execute(select).fetchall()
+    rows: List[Tuple[str, str, str]] = cur.execute(select).fetchall()
 
     graph = nx.Graph()
     addEdges(graph, rows)
